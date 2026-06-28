@@ -29,17 +29,67 @@
 
 html,
 body {
-  background: #06030f;
-  color: white;
   font-family: var(--font-inter), system-ui, sans-serif;
   scroll-behavior: smooth;
+  transition: background 0.5s ease, color 0.5s ease;
+}
+
+/* ============ DARK (default) ============ */
+html.dark body { background: #06030f; color: #ffffff; }
+html.dark .surface { background: rgba(12, 6, 27, 0.7); }
+html.dark .glass {
+  background: linear-gradient(180deg, rgba(168,85,247,0.06), rgba(34,211,238,0.04));
+  border: 1px solid rgba(168,85,247,0.18);
+  backdrop-filter: blur(14px);
+}
+html.dark .glass-strong {
+  background: rgba(12, 6, 27, 0.7);
+  border: 1px solid rgba(168,85,247,0.25);
+  backdrop-filter: blur(20px);
+}
+html.dark .text-muted { color: rgba(255,255,255,0.6); }
+html.dark .text-subtle { color: rgba(255,255,255,0.75); }
+html.dark .divider { border-color: rgba(255,255,255,0.05); }
+html.dark .input-base {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+}
+html.dark .input-base::placeholder { color: rgba(255,255,255,0.4); }
+
+/* ============ LIGHT ============ */
+html:not(.dark) body { background: #f7f6fb; color: #0c0820; }
+html:not(.dark) .surface { background: rgba(255,255,255,0.7); }
+html:not(.dark) .glass {
+  background: linear-gradient(180deg, rgba(168,85,247,0.07), rgba(34,211,238,0.05));
+  border: 1px solid rgba(168,85,247,0.18);
+  backdrop-filter: blur(14px);
+}
+html:not(.dark) .glass-strong {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(168,85,247,0.2);
+  backdrop-filter: blur(20px);
+}
+html:not(.dark) .text-muted { color: rgba(12,8,32,0.6); }
+html:not(.dark) .text-subtle { color: rgba(12,8,32,0.78); }
+html:not(.dark) .divider { border-color: rgba(12,8,32,0.08); }
+html:not(.dark) .input-base {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(12,8,32,0.12);
+  color: #0c0820;
+}
+html:not(.dark) .input-base::placeholder { color: rgba(12,8,32,0.4); }
+html:not(.dark) .bg-grid {
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.12) 1px, transparent 1px);
 }
 
 /* ===== Animated grid background ===== */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(168, 85, 247, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(168, 85, 247, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.08) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
 }
@@ -53,12 +103,19 @@ body {
   background-size: 200% auto;
   animation: shine 6s linear infinite;
 }
-@keyframes shine {
-  to { background-position: 200% center; }
+.text-gold-gradient {
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 200% auto;
+  animation: shine 6s linear infinite;
 }
+@keyframes shine { to { background-position: 200% center; } }
 
 .glow-purple { box-shadow: 0 0 30px rgba(168, 85, 247, 0.45), 0 0 80px rgba(168, 85, 247, 0.2); }
 .glow-cyan   { box-shadow: 0 0 30px rgba(34, 211, 238, 0.45), 0 0 80px rgba(34, 211, 238, 0.2); }
+.glow-gold   { box-shadow: 0 0 30px rgba(251, 191, 36, 0.4), 0 0 80px rgba(245, 158, 11, 0.25); }
 
 /* ===== Floating blobs ===== */
 .blob {
@@ -74,12 +131,13 @@ body {
   50% { transform: translate3d(40px, -30px, 0) scale(1.08); }
 }
 
-/* ===== Marquee for skills ===== */
+/* ===== Marquee ===== */
 .marquee {
   display: flex;
   width: max-content;
   animation: marquee 35s linear infinite;
 }
+.marquee-slow { animation-duration: 60s; }
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
@@ -96,7 +154,7 @@ body {
 
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #0a0418; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #a855f7, #22d3ee);
   border-radius: 10px;
@@ -118,29 +176,14 @@ body {
   animation: twinkle 6s ease-in-out infinite alternate;
 }
 .stars::after { animation-delay: 2s; opacity: 0.5; }
+html:not(.dark) .stars::before, html:not(.dark) .stars::after { display: none; }
 @keyframes twinkle {
   from { opacity: 0.4; }
   to   { opacity: 1; }
 }
 
-/* ===== Border-glow card ===== */
-.glass {
-  background: linear-gradient(180deg, rgba(168,85,247,0.06), rgba(34,211,238,0.04));
-  border: 1px solid rgba(168,85,247,0.18);
-  backdrop-filter: blur(14px);
-}
-.glass-strong {
-  background: rgba(12, 6, 27, 0.7);
-  border: 1px solid rgba(168,85,247,0.25);
-  backdrop-filter: blur(20px);
-}
-
-/* ===== Animated underline button ===== */
-.btn-neon {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
+/* Animated neon button border */
+.btn-neon { position: relative; overflow: hidden; isolation: isolate; }
 .btn-neon::before {
   content: "";
   position: absolute;
@@ -151,16 +194,11 @@ body {
   animation: rotate 4s linear infinite;
   filter: blur(2px);
 }
-@keyframes rotate {
-  to { transform: rotate(360deg); }
-}
+@keyframes rotate { to { transform: rotate(360deg); } }
 
 /* Avatar ring */
-.ring-orbit {
-  position: relative;
-}
-.ring-orbit::before,
-.ring-orbit::after {
+.ring-orbit { position: relative; }
+.ring-orbit::before, .ring-orbit::after {
   content: "";
   position: absolute;
   inset: -14px;
@@ -173,8 +211,14 @@ body {
   border-color: rgba(34, 211, 238, 0.4);
   animation: spin 24s linear infinite reverse;
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Photo color treatment for the professional avatar */
+.pro-photo {
+  filter: contrast(1.05) saturate(0.85) brightness(0.95);
+}
+html:not(.dark) .pro-photo {
+  filter: contrast(1.05) saturate(0.95) brightness(1.02);
 }
 
 /* Chat bubble pop */
@@ -184,9 +228,35 @@ body {
 }
 .chat-pop { animation: pop 0.3s ease-out both; }
 
-/* Hide focus outline cleanly */
+/* Perspective floor */
+.perspective-floor {
+  position: absolute;
+  inset: auto 0 -10% 0;
+  height: 60vh;
+  background:
+    linear-gradient(to top, rgba(168,85,247,0.18), transparent 70%),
+    repeating-linear-gradient(to right, rgba(168,85,247,0.18) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(to bottom, rgba(34,211,238,0.18) 0 1px, transparent 1px 60px);
+  transform: perspective(700px) rotateX(60deg);
+  transform-origin: bottom;
+  mask-image: linear-gradient(to top, black, transparent 95%);
+  pointer-events: none;
+  opacity: 0.45;
+}
+html:not(.dark) .perspective-floor { opacity: 0.7; }
+
+/* Focus */
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
   outline: 2px solid rgba(168, 85, 247, 0.7);
   outline-offset: 2px;
   border-radius: 8px;
 }
+
+/* Contribution heatmap */
+.cb-cell { width: 11px; height: 11px; border-radius: 2px; }
+.cb-0 { background: rgba(168,85,247,0.08); }
+.cb-1 { background: rgba(168,85,247,0.35); }
+.cb-2 { background: rgba(168,85,247,0.55); }
+.cb-3 { background: rgba(34,211,238,0.65); }
+.cb-4 { background: linear-gradient(135deg, #a855f7, #22d3ee); box-shadow: 0 0 8px rgba(168,85,247,0.6); }
+html:not(.dark) .cb-0 { background: rgba(168,85,247,0.12); }
