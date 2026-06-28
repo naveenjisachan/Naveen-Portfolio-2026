@@ -122,7 +122,7 @@ function Navbar({ activeId }) {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <a href={NAVEEN.resumeUrl} target="_blank" rel="noopener noreferrer" className="hidden md:inline-block">
+          <a href={NAVEEN.resumeDownloadUrl} download="Naveen_Sachan_Resume.pdf" className="hidden md:inline-block">
             <Button className="btn-neon bg-gradient-to-r from-fuchsia-600 to-cyan-500 text-white border-0 hover:opacity-90 rounded-xl">
               <Download className="h-4 w-4 mr-2" /> Resume
             </Button>
@@ -142,7 +142,7 @@ function Navbar({ activeId }) {
                 {s.label}
               </a>
             ))}
-            <a href={NAVEEN.resumeUrl} target="_blank" rel="noopener noreferrer" className="block mt-2">
+            <a href={NAVEEN.resumeDownloadUrl} download="Naveen_Sachan_Resume.pdf" className="block mt-2">
               <Button className="w-full bg-gradient-to-r from-fuchsia-600 to-cyan-500 border-0">
                 <Download className="h-4 w-4 mr-2" /> Download Resume
               </Button>
@@ -184,7 +184,7 @@ function Hero() {
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.35 }}
             className="mt-8 flex flex-wrap gap-3">
-            <a href={NAVEEN.resumeUrl} target="_blank" rel="noopener noreferrer">
+            <a href={NAVEEN.resumeDownloadUrl} download="Naveen_Sachan_Resume.pdf">
               <Button size="lg" className="btn-neon rounded-xl bg-gradient-to-r from-fuchsia-600 to-cyan-500 border-0 text-white hover:opacity-90">
                 <Download className="h-4 w-4 mr-2" /> Download Resume
               </Button>
@@ -255,24 +255,32 @@ function Hero() {
               </div>
             </motion.div>
 
-            {/* floating tech badges */}
-            {[
-              { t: "React", c: "from-cyan-400 to-blue-500", x: -120, y: -40 },
-              { t: "Next.js", c: "from-white to-zinc-300 text-black", x: 130, y: -60 },
-              { t: "TypeScript", c: "from-blue-500 to-indigo-600", x: 150, y: 80 },
-              { t: "MFE", c: "from-fuchsia-500 to-purple-600", x: -140, y: 100 },
-              { t: "Tailwind", c: "from-sky-400 to-cyan-500", x: -160, y: 20 },
-            ].map((b, i) => (
-              <motion.div key={b.t} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 + i * 0.12, duration: 0.6 }}
-                className="absolute"
-                style={{ left: `calc(50% + ${b.x}px)`, top: `calc(50% + ${b.y}px)` }}>
-                <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3 + i, repeat: Infinity, ease: "easeInOut" }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r ${b.c} shadow-xl whitespace-nowrap`}>
-                  {b.t}
+            {/* floating tech badges arranged in a circle */}
+            {NAVEEN.heroBadges.map((b, i) => {
+              const total = NAVEEN.heroBadges.length;
+              const angle = (i / total) * Math.PI * 2 - Math.PI / 2; // start from top
+              const radius = 200; // distance from center
+              const x = Math.cos(angle) * radius;
+              const y = Math.sin(angle) * radius;
+              return (
+                <motion.div
+                  key={b.t}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + i * 0.06, duration: 0.5 }}
+                  className="absolute pointer-events-none"
+                  style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)`, transform: "translate(-50%, -50%)" }}
+                >
+                  <motion.div
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 3 + (i % 4), repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gradient-to-r ${b.c} shadow-xl whitespace-nowrap pointer-events-auto`}
+                  >
+                    {b.t}
+                  </motion.div>
                 </motion.div>
-              </motion.div>
-            ))}
+              );
+            })}
 
             {/* Floating ring of dots */}
             <div className="absolute -inset-12 rounded-full pointer-events-none" aria-hidden />
@@ -633,7 +641,7 @@ function Contact() {
                 </div>
               </Card>
             </a>
-            <a href={NAVEEN.resumeUrl} target="_blank" rel="noopener noreferrer" className="block">
+            <a href={NAVEEN.resumeDownloadUrl} download="Naveen_Sachan_Resume.pdf" className="block">
               <Card className="glass-strong border-0 p-5 flex items-center justify-between">
                 <div>
                   <div className="font-semibold">Grab my full résumé</div>

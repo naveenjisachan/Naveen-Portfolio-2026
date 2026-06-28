@@ -38,6 +38,28 @@ export async function GET(_req, ctx) {
   if (route === "profile") {
     return cors(NextResponse.json({ name: NAVEEN.name, title: NAVEEN.title, email: NAVEEN.email }));
   }
+  if (route === "resume") {
+    // Proxy the resume PDF and force download (works around cross-origin download restrictions)
+    try {
+      const resumeUrl = process.env.NEXT_PUBLIC_RESUME_URL;
+      if (!resumeUrl) return cors(NextResponse.json({ error: "Resume not configured" }, { status: 500 }));
+      const r = await fetch(resumeUrl);
+      if (!r.ok) return cors(NextResponse.json({ error: "Failed to fetch resume" }, { status: 502 }));
+      const buf = await r.arrayBuffer();
+      const res = new NextResponse(buf, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": 'attachment; filename="Naveen_Sachan_Resume.pdf"',
+          "Cache-Control": "public, max-age=3600",
+          "Content-Length": String(buf.byteLength),
+        },
+      });
+      return cors(res);
+    } catch (e) {
+      return cors(NextResponse.json({ error: "Resume fetch failed", detail: e?.message }, { status: 500 }));
+    }
+  }
   if (route === "contributions") {
     // Deterministic pseudo-random heatmap (53 weeks x 7 days) seeded by date string
     const today = new Date();
