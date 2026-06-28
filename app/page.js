@@ -260,8 +260,9 @@ function Hero() {
               const total = NAVEEN.heroBadges.length;
               const angle = (i / total) * Math.PI * 2 - Math.PI / 2; // start from top
               const radius = 200; // distance from center
-              const x = Math.cos(angle) * radius;
-              const y = Math.sin(angle) * radius;
+              // Round to 2 decimals so SSR and CSR produce identical strings (avoids hydration mismatch)
+              const x = (Math.cos(angle) * radius).toFixed(2);
+              const y = (Math.sin(angle) * radius).toFixed(2);
               return (
                 <motion.div
                   key={b.t}
