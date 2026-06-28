@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 264 50% 4%;
+    --foreground: 0 0% 98%;
+    --card: 264 40% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 264 40% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 280 91% 65%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 191 100% 55%;
+    --secondary-foreground: 0 0% 5%;
+    --muted: 264 30% 15%;
+    --muted-foreground: 264 10% 70%;
+    --accent: 280 91% 65%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 264 30% 18%;
+    --input: 264 30% 18%;
+    --ring: 280 91% 65%;
+    --radius: 0.75rem;
+  }
+}
+
+html,
+body {
+  background: #06030f;
+  color: white;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  scroll-behavior: smooth;
+}
+
+/* ===== Animated grid background ===== */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.07) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* ===== Glow + gradient text ===== */
+.text-gradient {
+  background: linear-gradient(90deg, #a855f7 0%, #22d3ee 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 200% auto;
+  animation: shine 6s linear infinite;
+}
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+.glow-purple { box-shadow: 0 0 30px rgba(168, 85, 247, 0.45), 0 0 80px rgba(168, 85, 247, 0.2); }
+.glow-cyan   { box-shadow: 0 0 30px rgba(34, 211, 238, 0.45), 0 0 80px rgba(34, 211, 238, 0.2); }
+
+/* ===== Floating blobs ===== */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: float 14s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(40px, -30px, 0) scale(1.08); }
+}
+
+/* ===== Marquee for skills ===== */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ===== 3D tilt card ===== */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tilt-card:hover {
+  transform: perspective(1000px) rotateX(6deg) rotateY(-8deg) translateZ(8px);
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0a0418; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a855f7, #22d3ee);
+  border-radius: 10px;
+}
+
+/* ===== Star field ===== */
+.stars::before, .stars::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.7), transparent 60%),
+    radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,.5), transparent 60%),
+    radial-gradient(2px 2px at 40% 80%, rgba(255,255,255,.6), transparent 60%),
+    radial-gradient(1.5px 1.5px at 85% 20%, rgba(255,255,255,.4), transparent 60%),
+    radial-gradient(2.5px 2.5px at 10% 70%, rgba(168,85,247,.7), transparent 60%),
+    radial-gradient(2px 2px at 60% 10%, rgba(34,211,238,.6), transparent 60%);
+  background-size: 100% 100%;
+  animation: twinkle 6s ease-in-out infinite alternate;
+}
+.stars::after { animation-delay: 2s; opacity: 0.5; }
+@keyframes twinkle {
+  from { opacity: 0.4; }
+  to   { opacity: 1; }
+}
+
+/* ===== Border-glow card ===== */
+.glass {
+  background: linear-gradient(180deg, rgba(168,85,247,0.06), rgba(34,211,238,0.04));
+  border: 1px solid rgba(168,85,247,0.18);
+  backdrop-filter: blur(14px);
+}
+.glass-strong {
+  background: rgba(12, 6, 27, 0.7);
+  border: 1px solid rgba(168,85,247,0.25);
+  backdrop-filter: blur(20px);
+}
+
+/* ===== Animated underline button ===== */
+.btn-neon {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-neon::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: conic-gradient(from 0deg, #a855f7, #22d3ee, #ec4899, #a855f7);
+  z-index: -1;
+  border-radius: inherit;
+  animation: rotate 4s linear infinite;
+  filter: blur(2px);
+}
+@keyframes rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* Avatar ring */
+.ring-orbit {
+  position: relative;
+}
+.ring-orbit::before,
+.ring-orbit::after {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 9999px;
+  border: 1.5px dashed rgba(168, 85, 247, 0.5);
+  animation: spin 16s linear infinite;
+}
+.ring-orbit::after {
+  inset: -28px;
+  border-color: rgba(34, 211, 238, 0.4);
+  animation: spin 24s linear infinite reverse;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Chat bubble pop */
+@keyframes pop {
+  0% { transform: translateY(10px) scale(0.95); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.chat-pop { animation: pop 0.3s ease-out both; }
+
+/* Hide focus outline cleanly */
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid rgba(168, 85, 247, 0.7);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
