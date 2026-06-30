@@ -5,6 +5,7 @@ import { buildResumeContext, NAVEEN } from "@/lib/naveen-data";
 
 export const runtime = "nodejs";
 
+const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const EMERGENT_BASE_URL = "https://integrations.emergentagent.com/llm";
 
 // ---------- Mongo (lazy) ----------
@@ -80,33 +81,164 @@ export async function GET(_req, ctx) {
   return cors(NextResponse.json({ error: "Not found" }, { status: 404 }));
 }
 
-// ---------- LLM call ----------
-async function callEmergentLLM(messages) {
-  const apiKey = process.env.EMERGENT_LLM_KEY;
-  if (!apiKey) throw new Error("Missing EMERGENT_LLM_KEY");
+// ---------- LLM call (Groq primary, Gemini secondary, OpenAI tertiary, Emergent fallback) ----------
 
-  const candidates = [
-    { url: `${EMERGENT_BASE_URL}/v1/chat/completions`, model: "gpt-4o-mini" },
-    { url: `${EMERGENT_BASE_URL}/chat/completions`, model: "gpt-4o-mini" },
-    { url: `${EMERGENT_BASE_URL}/openai/v1/chat/completions`, model: "gpt-4o-mini" },
-  ];
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-  let lastErr = null;
-  for (const c of candidates) {
-    try {
-      const r = await fetch(c.url, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: c.model, messages, temperature: 0.8, max_tokens: 400 }),
+// Convert OpenAI-style messages to Gemini format
+function toGeminiContents(messages) {
+  const systemParts = [];
+  const contents = [];
+  for (const m of messages) {
+    if (m.role === "system") {
+      systemParts.push({ text: m.content });
+    } else {
+      contents.push({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
       });
-      if (!r.ok) { lastErr = `HTTP ${r.status} from ${c.url}: ${(await r.text()).slice(0, 200)}`; continue; }
-      const data = await r.json();
-      const content = data?.choices?.[0]?.message?.content?.trim() || data?.choices?.[0]?.text?.trim() || "";
-      if (content) return content;
-      lastErr = `Empty content from ${c.url}: ${JSON.stringify(data).slice(0, 200)}`;
-    } catch (e) { lastErr = `${c.url} -> ${e.message}`; }
+    }
   }
-  throw new Error(lastErr || "All emergent endpoints failed");
+  return { systemParts, contents };
+}
+
+async function callLLM(messages) {
+  // --- Strategy 1: Groq (free tier — 30 RPM, no credit card needed) ---
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const r = await fetch(GROQ_API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${groqKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages,
+          temperature: 0.8,
+          max_tokens: 400,
+        }),
+      });
+      if (!r.ok) {
+        const errText = (await r.text()).slice(0, 300);
+        console.error(`[callLLM] Groq HTTP ${r.status}: ${errText}`);
+      } else {
+        const data = await r.json();
+        const content =
+          data?.choices?.[0]?.message?.content?.trim() ||
+          data?.choices?.[0]?.text?.trim() ||
+          "";
+        if (content) return content;
+        console.error(`[callLLM] Groq returned empty content:`, JSON.stringify(data).slice(0, 300));
+      }
+    } catch (e) {
+      console.error(`[callLLM] Groq fetch error: ${e.message}`);
+    }
+  }
+
+  // --- Strategy 2: Google Gemini ---
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    try {
+      const model = "gemini-2.0-flash";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+      const { systemParts, contents } = toGeminiContents(messages);
+      const body = {
+        contents,
+        generationConfig: { temperature: 0.8, maxOutputTokens: 400 },
+      };
+      if (systemParts.length > 0) {
+        body.systemInstruction = { parts: systemParts };
+      }
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const errText = (await r.text()).slice(0, 300);
+        console.error(`[callLLM] Gemini HTTP ${r.status}: ${errText}`);
+      } else {
+        const data = await r.json();
+        const content = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        if (content) return content;
+        console.error(`[callLLM] Gemini returned empty content:`, JSON.stringify(data).slice(0, 300));
+      }
+    } catch (e) {
+      console.error(`[callLLM] Gemini fetch error: ${e.message}`);
+    }
+  }
+
+  // --- Strategy 3: Direct OpenAI API ---
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey) {
+    try {
+      const r = await fetch(OPENAI_API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages,
+          temperature: 0.8,
+          max_tokens: 400,
+        }),
+      });
+      if (!r.ok) {
+        const errText = (await r.text()).slice(0, 300);
+        console.error(`[callLLM] OpenAI HTTP ${r.status}: ${errText}`);
+      } else {
+        const data = await r.json();
+        const content =
+          data?.choices?.[0]?.message?.content?.trim() ||
+          data?.choices?.[0]?.text?.trim() ||
+          "";
+        if (content) return content;
+        console.error(`[callLLM] OpenAI returned empty content:`, JSON.stringify(data).slice(0, 300));
+      }
+    } catch (e) {
+      console.error(`[callLLM] OpenAI fetch error: ${e.message}`);
+    }
+  }
+
+  // --- Strategy 4: Emergent LLM proxy (only works on Emergent platform) ---
+  const emergentKey = process.env.EMERGENT_LLM_KEY;
+  if (emergentKey) {
+    const candidates = [
+      { url: `${EMERGENT_BASE_URL}/v1/chat/completions`, model: "gpt-4o-mini" },
+      { url: `${EMERGENT_BASE_URL}/chat/completions`, model: "gpt-4o-mini" },
+      { url: `${EMERGENT_BASE_URL}/openai/v1/chat/completions`, model: "gpt-4o-mini" },
+    ];
+
+    let lastErr = null;
+    for (const c of candidates) {
+      try {
+        const r = await fetch(c.url, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${emergentKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: c.model, messages, temperature: 0.8, max_tokens: 400 }),
+        });
+        if (!r.ok) { lastErr = `HTTP ${r.status} from ${c.url}: ${(await r.text()).slice(0, 200)}`; continue; }
+        const data = await r.json();
+        const content = data?.choices?.[0]?.message?.content?.trim() || data?.choices?.[0]?.text?.trim() || "";
+        if (content) return content;
+        lastErr = `Empty content from ${c.url}: ${JSON.stringify(data).slice(0, 200)}`;
+      } catch (e) { lastErr = `${c.url} -> ${e.message}`; }
+    }
+    console.error(`[callLLM] All Emergent endpoints failed: ${lastErr}`);
+  }
+
+  // --- No keys configured at all ---
+  if (!groqKey && !geminiKey && !openaiKey && !emergentKey) {
+    throw new Error(
+      "No LLM API key configured. Set GROQ_API_KEY (free, recommended) or GEMINI_API_KEY or OPENAI_API_KEY in your .env.local."
+    );
+  }
+
+  throw new Error("All LLM providers failed. Check your API key and billing status.");
 }
 
 // ---------- POST ----------
@@ -135,7 +267,7 @@ export async function POST(req, ctx) {
         { role: "user", content: userMessage.slice(0, 1500) },
       ];
 
-      const answer = await callEmergentLLM(messages);
+      const answer = await callLLM(messages);
 
       // Best-effort log (don't block the response if Mongo is down)
       try {
